@@ -29,6 +29,11 @@ function loadDrift () {
   drift.load('9h3pui39u2s3');
 }
 
+const DEFAULT_DRIFT_IDENTIFY_USER_PROPERTIES = [
+  'email', 'anonymous', 'dateCreated', 'hourOfCode', 'name', 'referrer', 'testGroupNumber', 'testGroupNumberUS',
+  'gender', 'lastLevel', 'siteref', 'ageRange', 'schoolName', 'coursePrepaidID', 'role'
+]
+
 export default class DriftTracker extends BaseTracker {
   constructor (store) {
     super()
@@ -84,11 +89,20 @@ export default class DriftTracker extends BaseTracker {
       ...meAttrs
     } = me
 
+    const filteredMeAttributes = Object.keys(meAttrs)
+      .reduce((obj, key) => {
+        if (DEFAULT_DRIFT_IDENTIFY_USER_PROPERTIES.includes(key)) {
+          obj[key] = meAttrs[key]
+        }
+
+        return obj
+      }, {})
+
     retryOnPageUnload('drift', 'identify', [ traits ], () => {
       window.drift.identify(
         _id.toString(),
         {
-          ...meAttrs,
+          ...filteredMeAttributes,
           ...traits
         }
       )
