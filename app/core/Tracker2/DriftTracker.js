@@ -1,4 +1,5 @@
 import BaseTracker from './BaseTracker'
+import { getPageUnloadRetriesForNamespace, retryOnPageUnload } from './pageUnload'
 
 function loadDrift () {
   /* eslint-disable */
@@ -48,6 +49,13 @@ export default class DriftTracker extends BaseTracker {
       this.initDriftOnLoad()
       this.onInitializeSuccess()
     })
+
+    await this.initializationComplete
+
+    const retries = await getPageUnloadRetriesForNamespace('drift')
+    for (const retry of retries) {
+      this[retry.identifier](...retry.args)
+    }
   }
 
   initDriftOnLoad () {
@@ -76,13 +84,15 @@ export default class DriftTracker extends BaseTracker {
       ...meAttrs
     } = me
 
-    await window.drift.identify(
-      _id.toString(),
-      {
-        ...meAttrs,
-        ...traits
-      }
-    )
+    retryOnPageUnload('drift', 'identify', [ traits ], () => {
+      window.drift.identify(
+        _id.toString(),
+        {
+          ...meAttrs,
+          ...traits
+        }
+      )
+    })
   }
 
   async trackPageView (includeIntegrations = {}) {
