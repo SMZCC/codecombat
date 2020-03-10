@@ -55,6 +55,14 @@ export default class Tracker2 extends BaseTracker {
     )
   }
 
+  async resetIdentity () {
+    await this.initializationComplete
+
+    await Promise.all(
+      this.trackers.map(t => t.resetIdentity())
+    )
+  }
+
   async trackPageView (includeIntegrations = {}) {
     await this.initializationComplete
 
