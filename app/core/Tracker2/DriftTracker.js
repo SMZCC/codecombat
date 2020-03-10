@@ -78,10 +78,6 @@ export default class DriftTracker extends BaseTracker {
   async identify (traits = {}) {
     await this.initializationComplete
 
-    if (this.store.getters['me/isAnonymous']) {
-      return
-    }
-
     const { me } = this.store.state
 
     const {
@@ -91,7 +87,7 @@ export default class DriftTracker extends BaseTracker {
 
     const filteredMeAttributes = Object.keys(meAttrs)
       .reduce((obj, key) => {
-        if (DEFAULT_DRIFT_IDENTIFY_USER_PROPERTIES.includes(key)) {
+        if (DEFAULT_DRIFT_IDENTIFY_USER_PROPERTIES.includes(key) && meAttrs[key] !== null) {
           obj[key] = meAttrs[key]
         }
 

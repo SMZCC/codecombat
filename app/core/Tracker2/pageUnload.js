@@ -34,7 +34,7 @@ function runAfterPageLoad (namespace, identifier, args) {
 export async function watchForPageUnload (timeout = 500) {
   let unloadCallback;
   const unloadPromise = new Promise((resolve, reject) => {
-    unloadCallback = reject('unload')
+    unloadCallback = () => reject('unload')
     window.addEventListener('beforeunload', unloadCallback)
   })
 

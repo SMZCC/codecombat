@@ -5,6 +5,8 @@ import BaseTracker from './BaseTracker'
 import GoogleAnalyticsTracker from './GoogleAnalyticsTracker'
 import DriftTracker from './DriftTracker'
 
+const SESSION_STORAGE_IDENTIFIED_AT_SESSION_START_KEY = 'coco.tracker.identifiedAtSessionStart'
+
 /**
  * Top level application tracker that handles sub tracker initialization and
  * event routing.
@@ -61,6 +63,8 @@ export default class Tracker2 extends BaseTracker {
     await Promise.all(
       this.trackers.map(t => t.resetIdentity())
     )
+
+    window.sessionStorage.removeItem(SESSION_STORAGE_IDENTIFIED_AT_SESSION_START_KEY)
   }
 
   async trackPageView (includeIntegrations = {}) {
@@ -89,5 +93,15 @@ export default class Tracker2 extends BaseTracker {
 
   get drift () {
     return this.driftTracker.drift
+  }
+
+  async identifyAtSessionStart () {
+    const identifiedThisSession = window.sessionStorage.getItem(SESSION_STORAGE_IDENTIFIED_AT_SESSION_START_KEY)
+    if (identifiedThisSession === 'true') {
+      return
+    }
+
+    await this.identify()
+    window.sessionStorage.setItem(SESSION_STORAGE_IDENTIFIED_AT_SESSION_START_KEY, 'true')
   }
 }
