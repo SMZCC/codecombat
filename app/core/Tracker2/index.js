@@ -6,6 +6,7 @@ import GoogleAnalyticsTracker from './GoogleAnalyticsTracker'
 import DriftTracker from './DriftTracker'
 
 const SESSION_STORAGE_IDENTIFIED_AT_SESSION_START_KEY = 'coco.tracker.identifiedAtSessionStart'
+const SESSION_STORAGE_IDENTIFY_ON_NEXT_PAGE_LOAD = 'coco.tracker.identifyOnNextPageLoad'
 
 /**
  * Top level application tracker that handles sub tracker initialization and
@@ -47,7 +48,29 @@ export default class Tracker2 extends BaseTracker {
     } catch (e) {
       this.onInitializeFail(e)
     }
+
+    await this.initializationComplete
+
+    let callIdentify = false
+
+    // Check initialize on page load
+    const initializeOnNextPageLoad = window.sessionStorage.getItem(SESSION_STORAGE_IDENTIFY_ON_NEXT_PAGE_LOAD)
+    if (initializeOnNextPageLoad === 'true') {
+      window.sessionStorage.removeItem(SESSION_STORAGE_IDENTIFY_ON_NEXT_PAGE_LOAD)
+      callIdentify = true
+    }
+
+    const identifiedThisSession = window.sessionStorage.getItem(SESSION_STORAGE_IDENTIFIED_AT_SESSION_START_KEY)
+    if (identifiedThisSession !== 'true') {
+      callIdentify = true
+      window.sessionStorage.setItem(SESSION_STORAGE_IDENTIFIED_AT_SESSION_START_KEY, 'true')
+    }
+
+    if (callIdentify) {
+      this.identify()
+    }
   }
+
 
   async identify (traits = {}) {
     await this.initializationComplete
@@ -95,13 +118,7 @@ export default class Tracker2 extends BaseTracker {
     return this.driftTracker.drift
   }
 
-  async identifyAtSessionStart () {
-    const identifiedThisSession = window.sessionStorage.getItem(SESSION_STORAGE_IDENTIFIED_AT_SESSION_START_KEY)
-    if (identifiedThisSession === 'true') {
-      return
-    }
-
-    await this.identify()
-    window.sessionStorage.setItem(SESSION_STORAGE_IDENTIFIED_AT_SESSION_START_KEY, 'true')
+  identifyAfterNextPageLoad () {
+    window.sessionStorage.setItem(SESSION_STORAGE_IDENTIFY_ON_NEXT_PAGE_LOAD, 'true')
   }
 }
